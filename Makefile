@@ -1,4 +1,4 @@
-default: ECERobotController
+default: nxtpid
 
-ECERobotController: ECERobotController.nxc
-	./nbc ECERobotController.nxc -O=ECERobotController
+ECERobotController: nxtpid.nxc
+	./nbc nxtpid.nxc -O=nxtpid
