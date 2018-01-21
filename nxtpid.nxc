@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------
-ECE102 Lego NXT Robot Project
+LEGO NXT PID Line Follower
 by Robin Messenger
 
-This is a program written for a Lego NXT. The goal is to follow a 
+This is a program written for a LEGO NXT. The goal is to follow a 
 line using downward-facing light sensor. I am using a Proportional 
 Integral Derivative (PID) controller to keep the robot on the edge 
 of a line on the ground. It is written in a c-style language called 
