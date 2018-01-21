@@ -1,0 +1,110 @@
+/*---------------------------------------------------------------
+ECE102 Lego NXT Robot Project
+by Robin Messenger
+
+This is a program written for a Lego NXT. The goal is to follow a 
+line using downward-facing light sensor. I am using a Proportional 
+Integral Derivative (PID) controller to keep the robot on the edge 
+of a line on the ground. It is written in a c-style language called 
+nxc designed specifically for the NXT. The compiler can be found at 
+http://bricxcc.sourceforge.net/nbc/
+------------------------------------------------------------------*/
+
+
+//PARAMETERS
+#define SIDEOFLINE 1
+#define KP 11000
+#define KI 190
+#define KD 11000
+#define INTEGRALDECAY 990
+#define MAXEI 500
+#define SETPOINT 38
+#define POWER 55
+#define LEFT_WHEEL OUT_A
+#define RIGHT_WHEEL OUT_B
+#define BOTH_WHEELS OUT_AB
+#define LIGHT_SENSOR S1
+
+
+/* This function takes a parameter rb which refers to the right bias of the
+robots steering. A value of zero indicates travel straight ahead, whereas
+a positive value steers right, and a negative value left. It sets the power
+to the motor powering each wheel based on this value */
+inline void drive(int rb)
+{
+    //restrict "right bias" to an appropriate range: the motor
+    //control functions take values between 0-100
+    if (rb>(100+POWER))
+        rb=100+POWER;
+    else if (rb<(-100-POWER))
+        rb=-100-POWER;
+
+    if (rb>0) //positive "right bias" (turn right)
+    {
+        // slow or reverse right wheel
+        if (POWER-rb<0)
+            OnRev(RIGHT_WHEEL,-POWER+rb);
+        else
+            OnFwd(RIGHT_WHEEL,POWER-rb);
+
+        //full power to right wheel
+        OnFwd(LEFT_WHEEL,POWER);
+    }
+    else //negative "right bias" (turn left)
+    {
+        //full power to right wheel
+        OnFwd(RIGHT_WHEEL,POWER);
+
+        //slow or reverse left wheel
+        if (POWER+rb<0)
+            OnRev(LEFT_WHEEL,-POWER-rb);
+        else
+            OnFwd(LEFT_WHEEL,POWER+rb);
+    }
+}
+
+
+/* The main "task" (the NXT has build-in multitasking, this keyword defines 
+an independant task, this program only uses one) */
+task main()
+{
+    //initialize the light sensor
+    SetSensorLight(LIGHT_SENSOR);
+    
+    //initialize the PID controller variables
+    int e=0;    //error
+    int ei=0;   //integral
+    int ed=0;   //derivative
+    int eOld=0; //previous error
+    int u;      //control variable
+    
+    while (true)
+    {
+        //MAIN LOOP--------------------------------------------------
+        //set the error to the light sensor value minus the set point
+        e=Sensor(LIGHT_SENSOR)-SETPOINT;
+        
+        //add current error to integral term, multiplying existing
+        //value by a decay factor to account for integral wind-up
+        ei=ei*INTEGRALDECAY/1000+e;
+        
+        //clear the integral term if we pass the set point
+        if (e*eOld<0)
+                ei=0;
+        
+        //derivative factor is the current minus the previous error
+        ed=e-eOld;
+        
+        //record old error
+        eOld=e;
+        
+        //calculate control variable
+        u=(KP*e+KI*ei+KD*ed+500)/1000;
+        
+        //acount for which side of the line we're following
+        u*=SIDEOFLINE;
+
+        drive(u); //drive with calculated steering correction
+        //-----------------------------------------------------------
+    }
+}
