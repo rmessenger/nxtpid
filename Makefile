@@ -1,4 +1,4 @@
 default: nxtpid
 
-ECERobotController: nxtpid.nxc
+nxtpid: nxtpid.nxc
 	./nbc nxtpid.nxc -O=nxtpid
